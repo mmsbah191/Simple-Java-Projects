@@ -16,35 +16,35 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-class p6InterestCalculator {
+class p6InterestRateCalculator {
 
-    private JLabel errorAmountLabel, errorInterestLabel, errorYearsLabel;
+    private JLabel errorloanAmountLabel, errorInterestLabel, errorYearsLabel;
 
     private JPanel mainPanel, buttonsPanel;
-    private JTextField amountTextField, interestRateTextField, yearsTextField;
+    private JTextField loanAmountTextField, interestRateTextField, yearsTextField;
     private JCheckBox annualCheckbox;
 
     private JLabel monthlyResLabel, totalResLabel;
 
     private JTextField monthsTextField;
 
-    p6InterestCalculator() {
+    p6InterestRateCalculator() {
 
         mainPanel = new JPanel(new GridLayout(5, 1));
-        // mainPanel.setBorder(new TitledBorder("Enter loan Amount, Interst, &
+        // mainPanel.setBorder(new TitledBorder("Enter loan loanAmount, Interst, &
         // years:"));
 
         //
-        JPanel amountThe2Line = new JPanel();
-        amountThe2Line.add(new JLabel("Loan Amount (k):"));
-        amountThe2Line.add(amountTextField = new JTextField("12k", 10));
+        JPanel loanAmountThe2Line = new JPanel();
+        loanAmountThe2Line.add(new JLabel("Loan loanAmount (k):"));
+        loanAmountThe2Line.add(loanAmountTextField = new JTextField("12k", 10));
 
-        JPanel amountErrorPanel = new JPanel();
-        amountErrorPanel.add(errorAmountLabel = new JLabel(""));
+        JPanel loanAmountErrorPanel = new JPanel();
+        loanAmountErrorPanel.add(errorloanAmountLabel = new JLabel(""));
 
-        JPanel amountPanel = new JPanel(new BorderLayout(0, 10));
-        amountPanel.add(amountErrorPanel, BorderLayout.NORTH);
-        amountPanel.add(amountThe2Line, BorderLayout.CENTER);
+        JPanel loanAmountPanel = new JPanel(new BorderLayout(0, 10));
+        loanAmountPanel.add(loanAmountErrorPanel, BorderLayout.NORTH);
+        loanAmountPanel.add(loanAmountThe2Line, BorderLayout.CENTER);
 
         //
         JPanel interestThe2Line = new JPanel();
@@ -81,13 +81,13 @@ class p6InterestCalculator {
         TotalPaymentPanel.add(new JLabel("Total payment:"));
         TotalPaymentPanel.add(totalResLabel = new JLabel());
 
-        mainPanel.add(amountPanel);
+        mainPanel.add(loanAmountPanel);
         mainPanel.add(interestPanel);
         mainPanel.add(yearsPanel);
         mainPanel.add(payMonthlyPaymentPanel);
         mainPanel.add(TotalPaymentPanel);
 
-        amountTextField.setToolTipText("amount");
+        loanAmountTextField.setToolTipText("loanAmount");
         interestRateTextField.setToolTipText("interst rate");
         yearsTextField.setToolTipText("years");
         monthsTextField.setToolTipText("months");
@@ -113,7 +113,7 @@ class p6InterestCalculator {
     }
 
     public static void main(String[] args) {
-        new p6InterestCalculator();
+        new p6InterestRateCalculator();
     }// end main
 
     private class ComputeJButtonListenerClass implements ActionListener {
@@ -131,19 +131,20 @@ class p6InterestCalculator {
     }// inner class
 
     private void compute() {
-        float amount = 0, interst = 0, years = 0, months = 0;
+        float loanAmount = 0, interst = 0;
+        int years = 0, months = 0;
         String error1 = "", error2 = "", error3 = "";
         InterstRate interestOb;
 
-        if (!amountTextField.getText().isEmpty()) {
+        if (!loanAmountTextField.getText().isEmpty()) {
             try {
-                amount = getValue(amountTextField);
+                loanAmount = getValue(loanAmountTextField);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                error1 = "Invalid amount, Enter numirec values.";
+                error1 = "Invalid loanAmount, Enter numirec values.";
             }
         } else {
-            error1 = "Enter amount:";
+            error1 = "Enter loanAmount:";
         }
 
         if (!interestRateTextField.getText().isBlank()) {
@@ -158,7 +159,7 @@ class p6InterestCalculator {
             error2 = "Enter interst:";
         }
 
-        if (!yearsTextField.getText().isBlank() || !monthsTextField.getText().isBlank()) {
+        if (!yearsTextField.getText().isEmpty() || !monthsTextField.getText().isEmpty()) {
             try {
                 years = getValue(yearsTextField);
                 months = getValue(monthsTextField);
@@ -173,28 +174,30 @@ class p6InterestCalculator {
         }
 
         if (error1.isBlank() && error2.isBlank() && error3.isBlank()) {
-            interestOb = new InterstRate(amount, interst, months, annualCheckbox.isSelected());
+            interestOb = new InterstRate(loanAmount, interst, months, annualCheckbox.isSelected());
             monthlyResLabel.setText(String.format("%.2f$", interestOb.getPayMonthly()));
-            totalResLabel.setText(String.format("%.2f$", interestOb.getLoanAmount()));
+            totalResLabel.setText(String.format("%.2f$", interestOb.getPayAmount()));
         } else {
-            errorAmountLabel.setText(error1);
+            errorloanAmountLabel.setText(error1);
             errorInterestLabel.setText(error2);
             errorYearsLabel.setText(error3);
         }
 
     }// end compute func
 
-    private float getValue(JTextField jtf) {
-        String val = jtf.getText().replace("$", "");
-        val = val.replace("%", "");
-        val = val.replace("k", "000");
-        val = val.replace("K", "000");
+    private int getValue(JTextField jtf) {
+        String text = jtf.getText().replace("$", "");
+        text = text.replace("%", "");
+        text = text.replace("k", "000");
+        text = text.replace("K", "000");
 
-        return Float.parseFloat(val);
+        if (text.isEmpty())
+            return 0;
+        return Integer.parseInt(text);
     }
 
     private void clear() {
-        amountTextField.setText("");
+        loanAmountTextField.setText("");
         interestRateTextField.setText("");
         yearsTextField.setText("");
         monthlyResLabel.setText("");
@@ -204,37 +207,50 @@ class p6InterestCalculator {
 }// end p6LoanCalculator
 
 class InterstRate {
-    private float payMonthly, loanAmount;
+    private float payMonthly, payAmount;
 
-    public InterstRate(float amount, float interst, float months, boolean yearly) {
+    public InterstRate(float loanAmount, float interestRate, float months, boolean yearly) {
         if (yearly)
-            calculateInterestRateYearly(amount, interst, months);
+            CalculateSimpleInterest(loanAmount, interestRate, months);
         else
-            calculateInterestRateForTotal(amount, interst, months);
+            calculateInterestRateForTotal(loanAmount, interestRate, months);
     }
 
-    private void calculateInterestRateForTotal(float amount, float interst, float months) {
-        loanAmount = amount * (100 + interst) / 100;
+    private void calculateInterestRateForTotal(float loanAmount, float interestRate, float months) {
+        payAmount = loanAmount * (100 + interestRate) / 100;
         if (months != 0)
-            payMonthly = loanAmount / months;
+            payMonthly = payAmount / months;
         else
             payMonthly = 0;
         // date=LocalDate.getInstance();
         // date.add(Year, year);
     }
 
-    private void calculateInterestRateYearly(float amount, float interst, float months) {
-        float perMonth = interst / 12;
-        payMonthly = amount * perMonth;
-        loanAmount = months * payMonthly;
+    private void calculateInterestRateYearly(float loanAmount, float interestRate, float months) {
+        float monthlyInterestRate = interestRate / 12 / 100;
+        int totalPayments = (int) Math.ceil(months / 12); // Use Math.ceil for potential non-integer years
+        payMonthly = (loanAmount * monthlyInterestRate)
+                / (1 - (float) Math.pow(1 + monthlyInterestRate, -totalPayments));
     }
 
     public float getPayMonthly() {
         return payMonthly;
     }
 
-    public float getLoanAmount() {
-        return loanAmount;
+    public float getPayAmount() {
+        return payAmount;
+    }
+
+    private void CalculateSimpleInterest(float loanAmount, float interestRate, float months) {
+        float p = loanAmount, r = interestRate, y = months / 12;
+        payAmount = (p * r * y) / 100;
+    }
+
+    private void CalculateCompoundInterest(float loanAmount, float interestRate, float months) {
+        float principal = loanAmount, rate = interestRate, years = months / 12;
+        float number;
+        // number:Number of Time interest Compounded
+        payAmount = (float) (principal * (Math.pow((1 + rate / 100), (years * 1))) - principal);
     }
 
 }// end loan class
