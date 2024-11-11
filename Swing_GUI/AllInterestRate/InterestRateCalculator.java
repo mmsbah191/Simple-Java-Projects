@@ -1,6 +1,10 @@
-package Swing_GUI.AllInterestRate;
 
-import java.awt.BorderLayout;
+// package Swing_GUI.AllInterestRate;
+//Last version test logic & Add new feature that accept integer only years months by MyIntRangeFilter & add MyFloatFilter & MypercentFilter 
+/*
+ * //add 
+ */ import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -12,46 +16,68 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.PlainDocument;
 
 class InterestRateCalculator {
-
-    private final JPanel mainPanel, buttonsPanel;
-    private final JTextField loanAmountTextField,
-            numberCompoundInterestTextField, interestRateTextField,
+    private static JFrame frame;
+    private final JPanel mainPanel, resultPanel, interestTotalPanel, monthlyPaymentPanel, totalPaymentsPanel,
+            buttonsPanel;
+    private static JTextField loanAmountTextField, numberCompoundInterestTextField, interestRateTextField,
             yearsTextField, monthsTextField;
-    // private final J
-    private final JCheckBox simpleInterestCheckBox, compoundInterestCheckBox,
-            totalCheckBox;
-    private final JRadioButton yearlyRadioButton, semiYearlyRadioButton,
-            quarterlyRadioButton, monthlyRadioButton,
+    private static JCheckBox simpleInterestCheckBox;
+    private static JCheckBox compoundInterestCheckBox;
+    private final JCheckBox totalCheckBox;
+    private static JRadioButton yearlyRadioButton, semiYearlyRadioButton, quarterlyRadioButton, monthlyRadioButton,
             dailyRadioButton;
-    private final JLabel interestTotalLabel, monthlyPaymentLabel,
-            totalPaymentsLabel;
+    private static JLabel resultLabel, interestTotalLabel, monthlyPaymentLabel, totalPaymentsLabel;
+    private final JMenuBar jMenuBar;
+    GridLayout gridMainPaneLayout;
+    private PlainDocument doc;
 
     InterestRateCalculator() {
 
-        mainPanel = new JPanel(new GridLayout(7, 1));
-        TitledBorder titleBorder = BorderFactory.createTitledBorder("Enter loan Amount, Interst rate and duration:");
-        mainPanel.setBorder(titleBorder);
+        gridMainPaneLayout = new GridLayout(9, 1);
+        mainPanel = new JPanel(gridMainPaneLayout);
+
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));// aligns
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        titlePanel.add(new JLabel("Enter  loan Amount, Interst rate and duration:"));
 
         // Loan amount panel
-        JPanel loanAmountPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5,
-                10));
+        JPanel loanAmountPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         loanAmountPanel.add(new JLabel("Loan Amount (k):"));
         loanAmountPanel.add(loanAmountTextField = new JTextField("12k", 10));
 
+        doc = (PlainDocument) loanAmountTextField.getDocument();
+        doc.setDocumentFilter(new MyFloatFilter());
+
         // Type Of Interest
         JPanel typeOfInterestCheckBoxPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        typeOfInterestCheckBoxPanel.add(new JLabel("Type of Interest:"));
         typeOfInterestCheckBoxPanel.add(simpleInterestCheckBox = new JCheckBox("Simple", true));
         typeOfInterestCheckBoxPanel.add(totalCheckBox = new JCheckBox("Total"));
-        typeOfInterestCheckBoxPanel.add(compoundInterestCheckBox = new JCheckBox("Compound"));
+        typeOfInterestCheckBoxPanel.add(compoundInterestCheckBox = new JCheckBox("Compound n:"));
         typeOfInterestCheckBoxPanel.add(numberCompoundInterestTextField = new JTextField("", 2));
         numberCompoundInterestTextField.setEnabled(false);
+
+        simpleInterestCheckBox.setBackground(Color.white);
+        totalCheckBox.setBackground(Color.white);
+        compoundInterestCheckBox.setBackground(Color.white);
+
+        doc = (PlainDocument) numberCompoundInterestTextField.getDocument();
+        doc.setDocumentFilter(new MyIntRangeFilter(1, 12));
 
         ButtonGroup typeOfInterestGroup = new ButtonGroup();
         typeOfInterestGroup.add(simpleInterestCheckBox);
@@ -68,15 +94,23 @@ class InterestRateCalculator {
         interestPanel.add(interestRateTextField = new JTextField("10%", 5));
         interestPanel.add(typeOfInterestCheckBoxPanel);
 
+        doc = (PlainDocument) interestRateTextField.getDocument();
+        doc.setDocumentFilter(new MypercentFilter(0, 1000));
+
         // interest RadioButton Panel
         JPanel interestRadioButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         interestRadioButtonPanel.add(new JLabel("interest rate Frequency:"));
-        interestRadioButtonPanel.add(yearlyRadioButton = new JRadioButton("Annually",
-                true));
+        interestRadioButtonPanel.add(yearlyRadioButton = new JRadioButton("Annually", true));
         interestRadioButtonPanel.add(semiYearlyRadioButton = new JRadioButton("Semiannually"));
         interestRadioButtonPanel.add(quarterlyRadioButton = new JRadioButton("Quarterly"));
         interestRadioButtonPanel.add(monthlyRadioButton = new JRadioButton("Monthly"));
         interestRadioButtonPanel.add(dailyRadioButton = new JRadioButton("Daily"));
+
+        yearlyRadioButton.setBackground(Color.white);
+        semiYearlyRadioButton.setBackground(Color.white);
+        quarterlyRadioButton.setBackground(Color.white);
+        monthlyRadioButton.setBackground(Color.white);
+        dailyRadioButton.setBackground(Color.white);
 
         ButtonGroup interestRadioButtonGroup = new ButtonGroup();
         interestRadioButtonGroup.add(yearlyRadioButton);
@@ -92,29 +126,36 @@ class InterestRateCalculator {
         durationPanel.add(yearsTextField = new JTextField("2", 5));
         durationPanel.add(new JLabel("Months:"));
         durationPanel.add(monthsTextField = new JTextField(5));
-        durationPanel.add(new JLabel("take Integer only"));
+
+        doc = (PlainDocument) yearsTextField.getDocument();
+        doc.setDocumentFilter(new MyIntRangeFilter(0, 10000));
+        doc = (PlainDocument) monthsTextField.getDocument();
+        doc.setDocumentFilter(new MyIntRangeFilter(0, 10000));
 
         // interestResPanel
-        JPanel InterestTotalPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5,
-                5));
-        InterestTotalPanel.add(interestTotalLabel = new JLabel("Interest total:"));
+        resultPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        resultPanel.add(resultLabel = new JLabel(""));
+
+        // interestResPanel
+        interestTotalPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        interestTotalPanel.add(interestTotalLabel = new JLabel("Interest total:"));
 
         // payMonthlyPaymentPanel
-        JPanel MonthlyPaymentPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5,
-                5));
-        MonthlyPaymentPanel.add(monthlyPaymentLabel = new JLabel("Monthly payment:"));
+        monthlyPaymentPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        monthlyPaymentPanel.add(monthlyPaymentLabel = new JLabel("Monthly payment:"));
 
         // TotalPaymentPanel
-        JPanel totalPaymentsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5,
-                5));
+        totalPaymentsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
         totalPaymentsPanel.add(totalPaymentsLabel = new JLabel("Payments total:"));
 
+        mainPanel.add(titlePanel);
         mainPanel.add(loanAmountPanel);
         mainPanel.add(interestPanel);
         mainPanel.add(interestRadioButtonPanel);
         mainPanel.add(durationPanel);
-        mainPanel.add(InterestTotalPanel);
-        mainPanel.add(MonthlyPaymentPanel);
+        mainPanel.add(resultPanel);
+        mainPanel.add(interestTotalPanel);
+        mainPanel.add(monthlyPaymentPanel);
         mainPanel.add(totalPaymentsPanel);
         // mainPanel.add(InterestTotalLabel=new JLabel("Interest total:")); here ihv
         // problem left only must add panel first to move center
@@ -136,25 +177,34 @@ class InterestRateCalculator {
         yearsTextField.setToolTipText("years");
         monthsTextField.setToolTipText("months");
 
-        // mainPanel.setBackground(Color.white);
-        // loanAmountPanel.setBackground(Color.white);
-        // interestPanel.setBackground(Color.white);
-        // typeOfInterestPanel.setBackground(Color.white);
-        // interestCheckboxPanel.setBackground(Color.white);
-        // durationPanel.setBackground(Color.white);
-        // InterestTotalPanel.setBackground(Color.white);
-        // MonthlyPaymentPanel.setBackground(Color.white);
-        // totalPaymentsPanel.setBackground(Color.white);
-        // buttonsPanel.setBackground(Color.white);
+        mainPanel.setBackground(Color.white);
+        loanAmountPanel.setBackground(Color.white);
+        interestPanel.setBackground(Color.white);
+        titlePanel.setBackground(Color.white);
+        interestRadioButtonPanel.setBackground(Color.white);
+        typeOfInterestCheckBoxPanel.setBackground(Color.white);
+        durationPanel.setBackground(Color.white);
+        resultPanel.setBackground(Color.white);
+        interestTotalPanel.setBackground(Color.white);
+        monthlyPaymentPanel.setBackground(Color.white);
+        totalPaymentsPanel.setBackground(Color.white);
+        buttonsPanel.setBackground(Color.white);
 
         // Create the main frame & add mainPanel,buttonsPanel
-        JFrame frame = new JFrame("Loan Calculator");
-        frame.add(mainPanel, BorderLayout.CENTER);
+        frame = new JFrame("Loan Calculator");
+        jMenuBar = new NaviMenuBar();
+        frame.setJMenuBar(jMenuBar);// not add or setMenuBar
+        frame.add(mainPanel, BorderLayout.NORTH);
+        //// frame.add(InterestTotalPanel,BorderLayout.CENTER);
         frame.add(buttonsPanel, BorderLayout.SOUTH);
         frame.pack();
         frame.setVisible(true);
         frame.setLocationRelativeTo(null);
+    }
 
+    public static void dispose() {
+        // Assuming your JFrame is named "frame"
+        frame.dispose(); // Closes the window
     }
 
     private class ComputeButtonListenerClass implements ActionListener {
@@ -195,7 +245,7 @@ class InterestRateCalculator {
     }
 
     private void compute() {
-        float loanAmount = 0, interest = 0;
+        float loanAmount = 0, rate = 0;
         int years = 0, months = 0;
         InterestRate interestOb;
         String errorMessage = ""; // Combine all errors into a single string
@@ -203,8 +253,7 @@ class InterestRateCalculator {
 
         if (!loanAmountTextField.getText().isBlank()) {
             try {
-                loanAmount = Float.parseFloat(loanAmountTextField.getText().replace("k",
-                        "000"));
+                loanAmount = Float.parseFloat(loanAmountTextField.getText().replace("k", "000"));
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 errorMessage += "Please enter a valid numeric value for the loan amount.\n";
@@ -216,22 +265,21 @@ class InterestRateCalculator {
 
         if (!interestRateTextField.getText().isBlank()) {
             try {
-                interest = Float.parseFloat(interestRateTextField.getText().replace("%",
-                        ""));
+                // interestRateTextField.setText(o.validate);
+                rate = Float.parseFloat(interestRateTextField.getText().replace("%", ""));
                 // Calculate the annual interest rate to standardize calculations and laws
                 if (dailyRadioButton.isSelected()) {
-                    interest = interest * 365.25f;
+                    rate = rate * 365.25f;
                 } else if (monthlyRadioButton.isSelected()) {
-                    interest = interest * 12;
+                    rate = rate * 12;
                 } else if (quarterlyRadioButton.isSelected()) {
-                    interest = interest * 4;
+                    rate = rate * 4;
                 } else if (semiYearlyRadioButton.isSelected()) {
-                    interest = interest * 2;
+                    rate = rate * 2;
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                errorMessage += "Invalid a interest rate, Enter numirec values.\n";
-                interestRateTextField.setText("");
+                errorMessage += "Invalid a interest rate, enter numeric values only.\n";
                 interestRateTextField.setText("");
             }
         } else {
@@ -241,28 +289,26 @@ class InterestRateCalculator {
         if (compoundInterestCheckBox.isSelected())
             if (!numberCompoundInterestTextField.getText().isBlank()) {
                 try {
-                    times = Integer.parseInt(0 +
-                            numberCompoundInterestTextField.getText().trim());
+                    times = Integer.parseInt(0 + numberCompoundInterestTextField.getText().trim());
                     if (times < 0)
-                        errorMessage += "Invalid compound number . Enter a non-negative integer. \n";
+                        errorMessage += "Invalid compound number, Enter a non-negative integer. \n";
                 } catch (Exception e) {
                     System.out.println(e.toString());
-                    errorMessage += "Invalid compound number, Enter integer number only.\n";
+                    errorMessage += "Invalid compound number, enter numeric values only.\n";
                     numberCompoundInterestTextField.setText("");
                 }
             } else {
-                errorMessage += "Enter the compound number of .\n";
+                errorMessage += "Enter the compound number.\n";
             }
 
-        if (!yearsTextField.getText().isBlank() ||
-                !monthsTextField.getText().isBlank()) {
+        if (!yearsTextField.getText().isBlank() || !monthsTextField.getText().isBlank()) {
             try {
                 years = Integer.parseInt(0 + yearsTextField.getText().trim());// 0+str for not parse empty string
                 if (years < 0)
-                    errorMessage += "Invalid years. Enter a non-negative integer. \n";
+                    errorMessage += "Invalid years, Enter a non-negative integer. \n";
                 months = Integer.parseInt(0 + monthsTextField.getText().trim());
                 if (months < 0)
-                    errorMessage += "Invalid months. Enter a non-negative integer. \n";
+                    errorMessage += "Invalid months, Enter a non-negative integer. \n";
                 months += years * 12;
             } catch (Exception e) {
                 System.out.println(e.toString());
@@ -275,40 +321,51 @@ class InterestRateCalculator {
         }
 
         if (errorMessage.isEmpty()) {
-            interestOb = new InterestRate(loanAmount, interest, months,
-                    totalCheckBox.isSelected(), times);
-            interestTotalLabel.setText(String.format("Interest total: %.2f$",
-                    interestOb.getInterest()));
-            monthlyPaymentLabel.setText(String.format("Monthly payment: %.2f$",
-                    interestOb.getPayMonthly()));
-            totalPaymentsLabel.setText(String.format("Payments total: %.2f$",
-                    interestOb.getPayTotalAmount()));
+            interestOb = new InterestRate(loanAmount, rate, months, totalCheckBox.isSelected(), times);
+            String result = "";
+            result += String.format("Loan Amount %.2f$, at the rate of %.2f%%, for %d month: \n", loanAmount, rate,
+                    months);
+            if (compoundInterestCheckBox.isSelected())
+                result += String.format(" with %d times\n", times);
+            resultLabel.setText(result);
+            result += String.format("Monthly payment: %.2f$\n", interestOb.getPayMonthly());
+            result += String.format("Interest total: %.2f$\n", interestOb.getInterest());
+            result += String.format("Payments total: %.2f$\n", interestOb.getPayTotalAmount());
+
+            JOptionPane.showMessageDialog(null, result, "result Interest Rate", 1);
+            interestTotalLabel.setText(String.format("Interest total: %.2f$", interestOb.getInterest()));
+            monthlyPaymentLabel.setText(String.format("Monthly payment: %.2f$", interestOb.getPayMonthly()));
+            totalPaymentsLabel.setText(String.format("Payments total: %.2f$", interestOb.getPayTotalAmount()));
         } else {
-            JOptionPane.showMessageDialog(null, errorMessage, "ALert calc Interest Rate",
-                    2);
+            JOptionPane.showMessageDialog(null, errorMessage, "ALert calc Interest Rate", 2);
         }
 
     }// end compute func
 
-    private void clear() {
+    public static void clear() {
         loanAmountTextField.setText("");
         interestRateTextField.setText("");
         yearlyRadioButton.setSelected(true);
         yearsTextField.setText("");
         monthsTextField.setText("");
 
-        // Remove the results labels
+        simpleInterestCheckBox.setSelected(true);
+        numberCompoundInterestTextField.setText("");
+        numberCompoundInterestTextField.setEnabled(false);
+        resultLabel.setText("");
         interestTotalLabel.setText("");
         monthlyPaymentLabel.setText("");
         totalPaymentsLabel.setText("");
 
-        simpleInterestCheckBox.setSelected(true);
-        numberCompoundInterestTextField.setText("");
-        numberCompoundInterestTextField.setEnabled(false);
     }// end clear func
 
     public static void main(String[] args) {
-        new InterestRateCalculator();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new InterestRateCalculator();
+            }
+        });
     }// end main
 
 }
@@ -335,22 +392,21 @@ class InterestRate {
         interest = payTotalAmount - loanAmount;
     }
 
-    private void CalculateSimpleInterest(float loanAmount, float interestRate,
-            int months) {
+    private void CalculateSimpleInterest(float loanAmount, float interestRate, int months) {
         /*
          * Simple interest is a quick method of calculating the interest charge on a
          * loan.
          * Simple interest is determined by multiplying the daily interest rate by the
          * principal by the number of days that elapse between payments.
-         *
+         * 
          * Simple Interest = (p × r × t)/100
-         *
+         * 
          * where p = Principal Amount, r = Rate percent Annum, t = Time (period of
          * years)
-         *
+         * 
          * A = p+prt/100 = p+pRt = p*(1 + Rt)
          * R = r / 100
-         *
+         * 
          * Where
          * A = total accrued amount (principal + interest)
          * R = rate of interest per year in decimal; r = R*100 % percent
@@ -364,8 +420,7 @@ class InterestRate {
             payMonthly = payTotalAmount / months;
     }
 
-    private void CalculateCompoundInterest(float loanAmount, float interestRate,
-            int months, int times) {
+    private void CalculateCompoundInterest(float loanAmount, float interestRate, int months, int times) {
         /*
          * CI Annual = principle* (pow((1 + rate / 100), numbers));
          * payTotalAmount= CI = principle* (pow((1 + rate / 100), numbers*years));
@@ -382,6 +437,7 @@ class InterestRate {
     }
 
     public float getPayTotalAmount() {
+
         return payTotalAmount;
     }
 
@@ -399,6 +455,279 @@ class InterestRate {
  * to do
  * // date=LocalDate.getInstance();
  * // date.add(Year, year);
- *
- * // 10, 000$ at the rate of 5% for 5
+ * 
+ * // keyboard enter calc
  */
+
+class MyFloatFilter extends DocumentFilter {
+    /*
+     * range numbers
+     * for use class:
+     * PlainDocument doc = (PlainDocument) textField.getDocument();
+     * doc.setDocumentFilter(new MyIntRangeFilter(10));
+     * 
+     * or
+     * ((AbstractDocument) textField.getDocument()).setDocumentFilter(new
+     * MyIntRangeFilter(10));
+     * 
+     * * import javax.swing.text.Document;
+     * import javax.swing.text.AttributeSet;
+     * import javax.swing.text.BadLocationException;
+     */
+
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+            throws BadLocationException {
+        String currentText = fb.getDocument().getText(0, fb.getDocument().getLength());
+        currentText = currentText.substring(0, offset) + text + currentText.substring(offset + length);
+
+        currentText = currentText.replace("k", "");
+        if (currentText.isEmpty() || isNumeric(currentText) && isDecimal(currentText)) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            // warn the user and don't allow the insert
+        }
+    }
+
+    boolean isNumeric(String percent) {
+        percent = percent.replace(".", "");// isNumeric
+        return percent.matches("\\d*");
+    }
+
+    private boolean isDecimal(String text) {
+        try {
+            Double.parseDouble(text);// isDecimal
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}
+
+class MyIntRangeFilter extends DocumentFilter {
+    /*
+     * range integer numbers
+     * for use class:
+     * PlainDocument doc = (PlainDocument) textField.getDocument();
+     * doc.setDocumentFilter(new MyIntRangeFilter(10));
+     * 
+     * or
+     * ((AbstractDocument) textField.getDocument()).setDocumentFilter(new
+     * MyIntRangeFilter(10));
+     * 
+     * * import javax.swing.text.Document;
+     * import javax.swing.text.AttributeSet;
+     * import javax.swing.text.BadLocationException;
+     */
+    private final int MIN;
+    private final int MAX;
+
+    public MyIntRangeFilter(int max) {
+        this(0, max);
+    }
+
+    public MyIntRangeFilter(int min, int max) {
+        this.MIN = min;
+        this.MAX = max;
+    }
+
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+            throws BadLocationException {
+        String currentText = fb.getDocument().getText(0, fb.getDocument().getLength());
+        currentText = currentText.substring(0, offset) + text + currentText.substring(offset + length);
+
+        if (currentText.isEmpty() || isIntRange(currentText)) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            // warn the user and don't allow the insert
+        }
+    }
+
+    private boolean isIntRange(String text) {
+        try {
+            int number = Integer.parseInt(text);// check if int
+            return number >= MIN && number <= MAX;// check if range
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}
+
+/*
+ * 
+ * if added a percentage, you cannot add numbers after it.
+ * Note that I want the range of numbers between min and max.
+ */
+class MypercentFilter extends DocumentFilter {
+    /*
+     * percentage only
+     * for use class
+     * PlainDocument doc = (PlainDocument) textField.getDocument();
+     * doc.setDocumentFilter(new MyIntRangeFilter(10));
+     * 
+     * or
+     * ((AbstractDocument) textField.getDocument()).setDocumentFilter(new
+     * MyIntRangeFilter(10));
+     * 
+     */
+
+    private final int MIN;
+    private final int MAX;
+
+    public MypercentFilter(int max) {
+        this(0, max);
+    }
+
+    public MypercentFilter(int min, int max) {
+        this.MIN = min;
+        this.MAX = max;
+    }
+
+    @Override
+    public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+            throws BadLocationException {
+        String currentText = fb.getDocument().getText(0, fb.getDocument().getLength());
+        currentText = currentText.substring(0, offset) + text + currentText.substring(offset + length);
+
+        int count = count(currentText, '%');
+        boolean isContainsPercent = count == 0 || count == 1 && currentText.charAt(currentText.length() - 1) == '%';
+        currentText = currentText.replace("%", "");
+        if (currentText.isEmpty() || isContainsPercent && isNumeric(currentText) && isInRange(currentText)) {
+            super.replace(fb, offset, length, text, attrs);
+        } else {
+            String errorMessage = "Invalid a interest rate, enter numeric values only.\n";
+            JOptionPane.showMessageDialog(null, errorMessage, "ALert calc Interest Rate", 2);
+        }
+    }
+
+    private int count(String currentText, char c) {
+        int count = 0;
+        for (int i = 0; i < currentText.length(); i++) {
+            if (currentText.charAt(i) == c)
+                count++;
+        }
+        return count;
+    }
+
+    boolean isNumeric(String percent) {
+        percent = percent.replace(".", "");
+        return percent.matches("\\d*");
+    }
+
+    private boolean isInRange(String text) {
+        try {
+            double number = Double.parseDouble(text);// isDecimal
+            return number >= MIN && number <= MAX;// isRange
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}
+
+class NaviMenuBar extends JMenuBar {// extends JMenuBar {
+
+    public NaviMenuBar() {
+        // Create menus
+        JMenu InterestRateMenu = new JMenu("Interestrate Calculator");
+        JMenu fileMenu = new JMenu("Home");
+        JMenu editMenu = new JMenu("Log");
+        JMenu helpMenu = new JMenu("Help");
+
+        // Create menu items
+        JMenuItem clearItem = new JMenuItem("Clear feilds");
+        JMenuItem restartItem = new JMenuItem("Restart");
+        JMenuItem closeItem = new JMenuItem("Close");
+
+        JMenuItem documentItem = new JMenuItem("Document");
+        JMenuItem websiteItem = new JMenuItem("Website");
+        JMenuItem shortcutItem = new JMenuItem("Shortcut");
+        JMenuItem aboutItem = new JMenuItem("About the Developer");
+
+        JMenuItem openLogItem = new JMenuItem("Open log");
+        JMenuItem saveLogItem = new JMenuItem("Save log");
+        JMenuItem clearLogItem = new JMenuItem("Clear log");
+
+        InterestRateMenu.setEnabled(false);
+
+        clearItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                InterestRateCalculator.clear();
+            }
+        });
+
+        restartItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        InterestRateCalculator.dispose();
+                        new InterestRateCalculator();
+                    }
+                });
+            }
+        });
+
+        closeItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                InterestRateCalculator.dispose();
+            }
+        });
+
+        aboutItem.addActionListener(new ActionListener() {
+            String aboutMe = "Fullstack developer with flutter dart frontend\nPy django or Php pure backend\nGithub:mmsbah191\nContact for projects email:mmsbah191@outlook.com\n";
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(null, aboutMe, "About the developer", JOptionPane.PLAIN_MESSAGE);
+            }
+        });
+
+        saveLogItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        // Add menu items to menus
+        fileMenu.add(clearItem);
+        fileMenu.add(helpMenu);// nested menu
+        fileMenu.addSeparator();
+        fileMenu.add(restartItem);
+        fileMenu.add(closeItem);
+
+        editMenu.add(openLogItem);
+        editMenu.add(saveLogItem);
+        editMenu.addSeparator();
+        editMenu.add(clearLogItem);
+
+        helpMenu.add(shortcutItem);
+        helpMenu.add(websiteItem);
+        helpMenu.add(documentItem);
+        helpMenu.add(aboutItem);
+
+        // add to JMenuBar panel
+        add(InterestRateMenu);
+        add(fileMenu);
+        add(editMenu);
+
+        // custmers not effect never
+        // setPreferredSize(new Dimension(900, 35));
+
+        // setFont(new Font("Arial", Font.BOLD, 10));
+        // setForeground(Color.blue);
+        // setLayout(new FlowLayout());
+
+        // Set the desired RGB color values
+        setBackground(new Color(255, 255, 255));// or
+        UIManager.put("MenuBar.background", Color.BLACK);
+    }
+
+}
