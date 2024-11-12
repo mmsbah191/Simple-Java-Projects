@@ -6,10 +6,11 @@ import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
 //Main
 public class Calculator extends JFrame {
 	JMenuBar jMenuBar;
-	public static JTextField jTextField;//composition best here
+	public static JTextField jTextField;// composition best here
 	JPanel btns;
 
 	public Calculator() {
@@ -34,6 +35,6 @@ public class Calculator extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		new Calculator();//start call cunstructer
+		new Calculator();// start call cunstructer
 	}
 }

@@ -1,5 +1,5 @@
 
-package Swing_GUI.AllInterestRate;
+package AllInterestRate;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
