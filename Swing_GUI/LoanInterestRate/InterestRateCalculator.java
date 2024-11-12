@@ -1,4 +1,4 @@
-package AllInterestRate;
+package LoanInterestRate;
 
 //Last version test logic & Add new feature that accept integer only years months by MyIntRangeFilter & add MyFloatFilter & MypercentFilter 
 /*
