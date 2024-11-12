@@ -1,9 +1,7 @@
 
-// package Swing_GUI.AllInterestRate;
-//Last version test logic & Add new feature that accept integer only years months by MyIntRangeFilter & add MyFloatFilter & MypercentFilter 
-/*
- * //add 
- */ import java.awt.BorderLayout;
+package Swing_GUI.AllInterestRate;
+
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
